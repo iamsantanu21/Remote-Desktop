@@ -1,0 +1,8 @@
+Install necessary libraries on both machines:
+pip install opencv-python numpy pyautogui pickle
+
+Run the server on Windows:
+python3 server.py
+
+Run the client on Mac:
+python client.py
