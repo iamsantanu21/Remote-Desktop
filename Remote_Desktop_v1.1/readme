@@ -1,17 +1,31 @@
 #For Mac
 python3 -m venv env
 source env/bin/activate
-pip3 install opencv-python pyautogui numpy
 
+pip install opencv-python numpy pyautogui pynput cryptography
+
+#Generate SSL Certificates on the server machine:
+openssl req -x509 -newkey rsa:2048 -keyout server.key -out server.crt -days 365 -nodes
+pip install pillow
+pip install --upgrade pyautogui
 python3 server.py
 
+pip install pillow
+pip install --upgrade pyautogui
 python3 client.py
 
 
 #For Windows
+python3 -m venv env
+source .\env\Scripts\activate
 
+pip install opencv-python numpy pyautogui pickle pynput cryptography
+
+#Generate SSL Certificates on the server machine:
+openssl req -x509 -newkey rsa:2048 -keyout server.key -out server.crt -days 365 -nodes
+pip install opencv-python numpy
 pip install opencv-python-headless pyautogui numpy
-python server.py
+python Server.py
 
 pip install opencv-python-headless numpy
-python client.py
+python Client.py
