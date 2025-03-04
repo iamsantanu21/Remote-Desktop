@@ -9,6 +9,9 @@ pip install opencv-python numpy pyautogui pynput cryptography
 #Generate SSL Certificates (For Secure Connection) On the Windows Server, run:
 openssl req -x509 -newkey rsa:2048 -keyout server.key -out server.crt -days 365 -nodes
 
+openssl req -x509 -newkey rsa:4096 -keyout server.key -out server.crt -days 365 -nodes
+
+
 
 pip install pyautogui pyscreeze pillow numpy opencv-python
 
