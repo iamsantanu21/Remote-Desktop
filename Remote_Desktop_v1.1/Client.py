@@ -6,7 +6,7 @@ import ssl
 import pyautogui
 
 # Connect to server
-server_ip = "10.10.166.113"  # Replace with your Windows IP
+server_ip = "10.10.166.113"  # Replace with Windows server IP
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Secure connection
@@ -29,7 +29,7 @@ try:
         frame = pickle.loads(data)
         frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
 
-        # Display
+        # Display the frame
         cv2.imshow("Live Remote Desktop", frame)
 
         # Send mouse position
