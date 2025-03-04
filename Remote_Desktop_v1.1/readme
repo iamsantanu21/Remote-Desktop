@@ -1,0 +1,17 @@
+#For Mac
+python3 -m venv env
+source env/bin/activate
+pip3 install opencv-python pyautogui numpy
+
+python3 server.py
+
+python3 client.py
+
+
+#For Windows
+
+pip install opencv-python-headless pyautogui numpy
+python server.py
+
+pip install opencv-python-headless numpy
+python client.py
