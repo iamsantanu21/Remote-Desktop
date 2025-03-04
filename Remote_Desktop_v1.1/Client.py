@@ -5,55 +5,41 @@ import struct
 import ssl
 import pyautogui
 
-# Server IP (Replace with actual Windows server IP)
-server_ip = "192.168.166.105"
-
-# Create Client Socket
+# Connect to server
+server_ip = "192.168.166.105"  # Replace with Windows server IP
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# SSL Context (Disable Strict Verification for Testing)
+# Secure connection
 context = ssl.create_default_context()
-context.check_hostname = False  # Disable hostname check
-context.verify_mode = ssl.CERT_NONE  # Disable certificate verification
-
-# Connect to Server
-conn = context.wrap_socket(client_socket)
+conn = context.wrap_socket(client_socket, server_hostname=server_ip)
 conn.connect((server_ip, 9999))
 print("✅ Connected to server.")
 
-def receive_data(conn, size):
-    """Helper function to receive exact bytes"""
-    data = b""
-    while len(data) < size:
-        packet = conn.recv(min(4096, size - len(data)))
-        if not packet:
-            return None  # Connection closed
-        data += packet
-    return data
+# Get client screen resolution
+client_width, client_height = pyautogui.size()
 
 try:
     while True:
-        # Receive frame size (8 bytes)
-        data_size_bytes = receive_data(conn, 8)
-        if not data_size_bytes:
-            break  # Stop if no data
+        # Receive frame size
+        data_size = struct.unpack("Q", conn.recv(8))[0]
 
-        data_size = struct.unpack("Q", data_size_bytes)[0]
+        # Receive image data
+        data = b""
+        while len(data) < data_size:
+            data += conn.recv(4096)
 
-        # Receive full image data
-        data = receive_data(conn, data_size)
-        if not data:
-            break
-
-        # Decode and Show Frame
+        # Decode frame
         frame = pickle.loads(data)
         frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
-        cv2.imshow("Live Remote Desktop", frame)
 
-        # Send Mouse Position
+        # Display the frame
+        cv2.imshow("🖥️ Live Remote Desktop", frame)
+
+        # Send mouse position
         x, y = pyautogui.position()
-        conn.sendall(f"MOUSE_MOVE {x} {y}".encode())
+        conn.sendall(f"MOUSE_MOVE {x} {y} {client_width} {client_height}".encode())
 
+        # Press 'q' to exit
         if cv2.waitKey(1) == ord("q"):
             break
 except Exception as e:
