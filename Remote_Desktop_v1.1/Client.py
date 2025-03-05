@@ -6,7 +6,7 @@ import ssl
 import pyautogui
 
 # Server IP (Replace with actual Windows server IP)
-server_ip = "192.168.166.105"
+server_ip = "10.10.166.113"
 
 # Create Client Socket
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

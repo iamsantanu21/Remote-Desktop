@@ -3,11 +3,13 @@ import cv2
 import pickle
 import struct
 import pyautogui
+import time
 
-server_ip = "10.10.166.113"  # Replace with actual server IP
+server_ip = "192.168.166.105"  # Replace with actual server IP
 
 # Create UDP Client Socket
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 10**6)  # Increase buffer size
 
 # Send Initial Connection Packet
 client_socket.sendto("CONNECT".encode(), (server_ip, 9999))
@@ -37,8 +39,9 @@ try:
         # Show Frame
         cv2.imshow("Live Remote Desktop", frame)
 
-        # Send Mouse Position
+        # Send Mouse Position (Throttled)
         x, y = pyautogui.position()
+        time.sleep(0.02)  # Small delay to prevent fast updates causing jitter
         client_socket.sendto(f"MOUSE_MOVE {x} {y}".encode(), (server_ip, 9999))
 
         # Quit on 'q' Press
