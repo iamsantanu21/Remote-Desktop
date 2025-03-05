@@ -1,0 +1,17 @@
+# (Mac/Linux)
+python3 -m venv remote_env
+source remote_env/bin/activate  
+# (Windows)
+python -m venv remote_env
+remote_env\Scripts\activate
+
+#Run the following command inside the virtual environment on both machines:
+pip install opencv-python numpy pyautogui pynput cryptography
+pip install --upgrade pyautogui pyscreeze pillow numpy opencv-python
+
+#Generate SSL Certificates (For Secure Connection) On the Windows Server, run:
+openssl req -x509 -newkey rsa:2048 -keyout server.key -out server.crt -days 365 -nodes
+
+python server.py
+
+python3 client.py
