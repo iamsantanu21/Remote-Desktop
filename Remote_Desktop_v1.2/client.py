@@ -2,48 +2,47 @@ import socket
 import cv2
 import pickle
 import struct
-import ssl
 import pyautogui
 
-# Connect to server
-server_ip = "192.168.166.105"  # Replace with Windows server IP
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_ip = "192.168.166.105"  # Replace with actual server IP
 
-# Secure connection
-context = ssl.create_default_context()
-conn = context.wrap_socket(client_socket, server_hostname=server_ip)
-conn.connect((server_ip, 9999))
+# Create UDP Client Socket
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+# Send Initial Connection Packet
+client_socket.sendto("CONNECT".encode(), (server_ip, 9999))
 print("✅ Connected to server.")
 
-# Get client screen resolution
-client_width, client_height = pyautogui.size()
+
+def receive_data(sock, size):
+    """Helper function to receive exact bytes"""
+    data, _ = sock.recvfrom(size)
+    return data
+
 
 try:
     while True:
-        # Receive frame size
-        data_size = struct.unpack("Q", conn.recv(8))[0]
+        # Receive Frame Size
+        data_size_bytes = receive_data(client_socket, 8)
+        data_size = struct.unpack("Q", data_size_bytes)[0]
 
-        # Receive image data
-        data = b""
-        while len(data) < data_size:
-            data += conn.recv(4096)
-
-        # Decode frame
+        # Receive Full Image Data
+        data, _ = client_socket.recvfrom(data_size)
         frame = pickle.loads(data)
         frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
 
-        # Display the frame
-        cv2.imshow("🖥️ Live Remote Desktop", frame)
+        # Show Frame
+        cv2.imshow("Live Remote Desktop", frame)
 
-        # Send mouse position
+        # Send Mouse Position
         x, y = pyautogui.position()
-        conn.sendall(f"MOUSE_MOVE {x} {y} {client_width} {client_height}".encode())
+        client_socket.sendto(f"MOUSE_MOVE {x} {y}".encode(), (server_ip, 9999))
 
-        # Press 'q' to exit
+        # Quit on 'q' Press
         if cv2.waitKey(1) == ord("q"):
             break
 except Exception as e:
     print(f"❌ Error: {e}")
 
-conn.close()
+client_socket.close()
 cv2.destroyAllWindows()
