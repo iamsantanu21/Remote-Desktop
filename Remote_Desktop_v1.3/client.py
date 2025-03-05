@@ -5,7 +5,7 @@ import struct
 import pyautogui
 import time
 
-server_ip = "192.168.166.105"  # Replace with actual server IP
+server_ip = "10.10.166.113"  # Replace with actual server IP
 
 # Create UDP Client Socket
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
