@@ -19,9 +19,11 @@ print("✅ Server is running... Waiting for connections.")
 
 clients = set()  # Store clients to send frames to all connected users
 
+PACKET_SIZE = 4096  # UDP max safe packet size
+
 
 def send_screen():
-    """Continuously capture and send screen frames."""
+    """Continuously capture and send screen frames in smaller UDP packets."""
     while True:
         try:
             screenshot = pyautogui.screenshot()
@@ -32,10 +34,18 @@ def send_screen():
             _, encoded_frame = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 40])
             data = pickle.dumps(encoded_frame)
 
-            # Send Frame Size and Data to All Clients
+            # Split into chunks
+            total_chunks = len(data) // PACKET_SIZE + 1
+
             for client in clients:
-                server_socket.sendto(struct.pack("Q", len(data)), client)
-                server_socket.sendto(data, client)
+                # Send total chunk count first
+                server_socket.sendto(struct.pack("Q", total_chunks), client)
+
+                # Send frame in chunks
+                for i in range(total_chunks):
+                    chunk = data[i * PACKET_SIZE : (i + 1) * PACKET_SIZE]
+                    server_socket.sendto(chunk, client)
+
         except Exception as e:
             print(f"❌ Error Sending Frame: {e}")
 
