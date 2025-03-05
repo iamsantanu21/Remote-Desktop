@@ -17,10 +17,9 @@ server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 server_socket.bind(("0.0.0.0", 9999))  # Listen on all interfaces
 print("✅ Server is running... Waiting for connections.")
 
-clients = set()  # Store clients to send frames to all connected users
+clients = set()  # Store connected clients
 
-PACKET_SIZE = 4096  # UDP max safe packet size
-
+PACKET_SIZE = 1400  # Reduce packet size to prevent network buffer issues
 
 def send_screen():
     """Continuously capture and send screen frames in smaller UDP packets."""
@@ -34,21 +33,19 @@ def send_screen():
             _, encoded_frame = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 40])
             data = pickle.dumps(encoded_frame)
 
-            # Split into chunks
-            total_chunks = len(data) // PACKET_SIZE + 1
+            total_chunks = (len(data) // PACKET_SIZE) + 1  # Calculate total chunks
 
             for client in clients:
-                # Send total chunk count first
+                # Send total chunks info first
                 server_socket.sendto(struct.pack("Q", total_chunks), client)
 
-                # Send frame in chunks
+                # Send frame in smaller chunks
                 for i in range(total_chunks):
                     chunk = data[i * PACKET_SIZE : (i + 1) * PACKET_SIZE]
                     server_socket.sendto(chunk, client)
 
         except Exception as e:
             print(f"❌ Error Sending Frame: {e}")
-
 
 def handle_client():
     """Receive mouse/keyboard commands from clients."""
@@ -59,7 +56,6 @@ def handle_client():
             process_command(command.decode())  # Process command
         except Exception as e:
             print(f"❌ Error Receiving Command: {e}")
-
 
 def process_command(command):
     """Process received mouse and keyboard commands."""
@@ -85,7 +81,6 @@ def process_command(command):
 
     except Exception as e:
         print(f"❌ Command Error: {e}")
-
 
 # Start Threads
 threading.Thread(target=send_screen, daemon=True).start()

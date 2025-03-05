@@ -13,8 +13,7 @@ client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 client_socket.sendto("CONNECT".encode(), (server_ip, 9999))
 print("✅ Connected to server.")
 
-PACKET_SIZE = 4096  # UDP packet size
-
+PACKET_SIZE = 1400  # Match server's reduced packet size
 
 def receive_data(sock, total_chunks):
     """Receive all chunks of data and reassemble."""
@@ -24,14 +23,13 @@ def receive_data(sock, total_chunks):
         data += chunk
     return data
 
-
 try:
     while True:
-        # Receive Total Chunk Count
+        # Receive total chunk count
         total_chunks_data, _ = client_socket.recvfrom(8)
         total_chunks = struct.unpack("Q", total_chunks_data)[0]
 
-        # Receive Full Image Data in Chunks
+        # Receive full image in chunks
         data = receive_data(client_socket, total_chunks)
         frame = pickle.loads(data)
         frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
