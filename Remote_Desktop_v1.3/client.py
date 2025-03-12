@@ -5,7 +5,7 @@ import struct
 import pyautogui
 import time
 
-server_ip = "10.10.166.113"  # Replace with actual server IP
+server_ip = "10.10.32.175"  # Replace with actual server IP
 
 # Create UDP Client Socket
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -21,20 +21,35 @@ def receive_data(sock, total_chunks):
     """Receive all chunks of data and reassemble."""
     data = b""
     for _ in range(total_chunks):
-        chunk, _ = sock.recvfrom(PACKET_SIZE)
-        data += chunk
+        try:
+            chunk, _ = sock.recvfrom(PACKET_SIZE)
+            data += chunk
+        except socket.timeout:
+            print("⚠️ Warning: Packet timeout, skipping frame.")
+            return None  # Drop frame if incomplete
     return data
 
 try:
     while True:
         # Receive total chunk count
-        total_chunks_data, _ = client_socket.recvfrom(8)
-        total_chunks = struct.unpack("Q", total_chunks_data)[0]
+        try:
+            total_chunks_data, _ = client_socket.recvfrom(8)
+            total_chunks = struct.unpack("Q", total_chunks_data)[0]
+        except struct.error:
+            print("⚠️ Warning: Corrupted chunk count received, skipping frame.")
+            continue
 
         # Receive full image in chunks
         data = receive_data(client_socket, total_chunks)
-        frame = pickle.loads(data)
-        frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
+        if data is None:  # Drop corrupted frame
+            continue
+
+        try:
+            frame = pickle.loads(data)
+            frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
+        except pickle.UnpicklingError:
+            print("❌ Error: Incomplete frame received, skipping.")
+            continue
 
         # Show Frame
         cv2.imshow("Live Remote Desktop", frame)
